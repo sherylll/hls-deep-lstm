@@ -13,9 +13,26 @@ def prepare_c_header(filename, macro_name):
 
     with open(filename, 'w+') as f:
         f.write(new_header)
-        
+
+def save_lstm_headers(path):        
+    print('generating headers...')
+    prepare_c_header(path+'/W_i.h', 'W_I')
+    prepare_c_header(path+'/W_f.h', 'W_F')
+    prepare_c_header(path+'/W_c.h', 'W_C')
+    prepare_c_header(path+'/W_o.h', 'W_O')
+
+    prepare_c_header(path+'/U_i.h', 'U_I')
+    prepare_c_header(path+'/U_f.h', 'U_F')
+    prepare_c_header(path+'/U_c.h', 'U_C')
+    prepare_c_header(path+'/U_o.h', 'U_O')
+
+    prepare_c_header(path+'/b_i.h', 'B_I')
+    prepare_c_header(path+'/b_f.h', 'B_F')
+    prepare_c_header(path+'/b_c.h', 'B_C')
+    prepare_c_header(path+'/b_o.h', 'B_O')
+
 def save_lstm_weights_to_txt(path, weights, hidden_size, if_header_gen=False):
-    # save parameters as C headers
+    # save keras parameters as file
     W_ifo = np.transpose(weights[0])
     W_i = W_ifo[:hidden_size]
     W_f = W_ifo[hidden_size:2*hidden_size]
@@ -48,25 +65,29 @@ def save_lstm_weights_to_txt(path, weights, hidden_size, if_header_gen=False):
     np.savetxt(path+'/b_o.h', b_o, newline=',')
 
     if if_header_gen:
-        print('generating headers...')
-        prepare_c_header(path+'/W_i.h', 'W_I')
-        prepare_c_header(path+'/W_f.h', 'W_F')
-        prepare_c_header(path+'/W_c.h', 'W_C')
-        prepare_c_header(path+'/W_o.h', 'W_O')
+        save_lstm_headers(path)
 
-        prepare_c_header(path+'/U_i.h', 'U_I')
-        prepare_c_header(path+'/U_f.h', 'U_F')
-        prepare_c_header(path+'/U_c.h', 'U_C')
-        prepare_c_header(path+'/U_o.h', 'U_O')
+def load_lstm_weights_from_txt(prefix, hidden_size):
+    W_i=np.loadtxt(prefix+'/W_i.h', delimiter=',')
+    W_f=np.loadtxt(prefix+'/W_f.h', delimiter=',')
+    W_c=np.loadtxt(prefix+'/W_c.h', delimiter=',')
+    W_o=np.loadtxt(prefix+'/W_o.h', delimiter=',')
+    U_i=np.loadtxt(prefix+'/U_i.h', delimiter=',')
+    U_f=np.loadtxt(prefix+'/U_f.h', delimiter=',')
+    U_c=np.loadtxt(prefix+'/U_c.h', delimiter=',')
+    U_o=np.loadtxt(prefix+'/U_o.h', delimiter=',')
+    b_i=np.loadtxt(prefix+'/b_i.h', delimiter=',',usecols=range(hidden_size)).flatten()
+    b_f=np.loadtxt(prefix+'/b_f.h', delimiter=',',usecols=range(hidden_size)).flatten()
+    b_c=np.loadtxt(prefix+'/b_c.h', delimiter=',',usecols=range(hidden_size)).flatten()
+    b_o=np.loadtxt(prefix+'/b_o.h', delimiter=',',usecols=range(hidden_size)).flatten()
+    return [W_i, W_f, W_c, W_o, U_i, U_f, U_c, U_o, b_i, b_f,b_c,b_o]
 
-        prepare_c_header(path+'/b_i.h', 'B_I')
-        prepare_c_header(path+'/b_f.h', 'B_F')
-        prepare_c_header(path+'/b_c.h', 'B_C')
-        prepare_c_header(path+'/b_o.h', 'B_O')
+def save_fc_headers(path):
+    prepare_c_header(path+'/fc/Why.h', 'WHY')
+    prepare_c_header(path+'/fc/by.h', 'BY')
 
 def save_fc_weights_to_txt(path, weights, if_header_gen=False):
     np.savetxt(path+'/fc/Why.h', np.transpose(weights[0]), delimiter=',')
     np.savetxt(path+'/fc/by.h', weights[1], newline=',') 
     if if_header_gen:
-        prepare_c_header(path+'/fc/Why.h', 'WHY')
-        prepare_c_header(path+'/fc/by.h', 'BY')
+        save_fc_headers(path)
