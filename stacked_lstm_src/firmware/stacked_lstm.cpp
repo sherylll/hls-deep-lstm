@@ -1,20 +1,12 @@
 /*
-
+simulation does not work due to large array size; internal compiler error returned
+h3[27]: 522 1951 61829 64947 38 2091 61706 1650 1792 63128 3196 1587 62951 64103 2081 566 65275 2632 64275 62165 1161 65055 64603 156 3673 64460 64967 2105 757 65509 2973 2793 63878 1189 63288 451 62089 675 1369 63516 2727 64788 700 62263 63510 62297 2164 64077 65432 64591 62128 715 3415 63916 62223 65118 65457 376 4095 525 360 2233 2496 124 1405 63791 62380 380 343 64402 2118 1934 2426 701 3180 2807 62389 64771 64914 64330 1503 199 110 62041 1019 63502 797 64716 63802 2426 64046 3468 2257 65288 64083 64842 64007 62597 580 64889 65449 1197 64629 2135 63281 2216 3363 1150 2639 2046 63679 65334 64472 63287 1528 64559 2609 64184 828 65127 2102 2622 64323 1653 65320 65163 64983 65013 
 */
 
 #include "parameters.h"
 #include "lstm.h"
 #include "../../hlslib/fic_utils/fic_packet.h"
 #include "../../test_data/test_digit_4.h"
-
-struct recurrent_act_config
-{
-    typedef data_t table_t;
-    static const unsigned n_in = N_STATES * 3;
-    static const unsigned table_size = 4096;
-    static const unsigned activation_type = nn::activ_hard_sigmoid; // Keras default
-    static const unsigned unroll_factor = 64;                       // for unrolling hardsigmoid
-};
 
 void stacked_lstm(ap_uint<4> rx_start,
                   data_t res[N_OUTPUTS])
@@ -96,8 +88,8 @@ void stacked_lstm(ap_uint<4> rx_start,
             test_row[i] = image_digit_4[iloop][i];
         }
 
-//        nn::lstm_static<data_t, config0, cell_act_config, recurrent_act_config>(test_row, h0_oldstate, h0_newstate, c0_oldstate, c0_newstate, W_i, W_f, W_c, W_o,
-//                                                                                U_i, U_f, U_c, U_o, b_i, b_f, b_c, b_o);
+       nn::lstm_static<data_t, config0, cell_act_config, recurrent_act_config>(test_row, h0_oldstate, h0_newstate, c0_oldstate, c0_newstate, W_i, W_f, W_c, W_o,
+                                                                               U_i, U_f, U_c, U_o, b_i, b_f, b_c, b_o);
 //        // fic::encoder<data_t, packet_config>(h0_newstate, packets_test);
 //        // fic::decoder<data_t, packet_config>(packets_test, h0_newstate);
 //        nn::lstm_static<data_t, config1, cell_act_config, recurrent_act_config>(h0_newstate, h1_oldstate, h1_newstate, c1_oldstate, c1_newstate, W1_i, W1_f, W1_c, W1_o,
@@ -106,8 +98,8 @@ void stacked_lstm(ap_uint<4> rx_start,
         nn::lstm_static<data_t, config1, cell_act_config, recurrent_act_config>(h1_newstate, h2_oldstate, h2_newstate, c2_oldstate, c2_newstate, W2_i, W2_f, W2_c, W2_o,
                                                                                 U2_i, U2_f, U2_c, U2_o, b2_i, b2_f, b2_c, b2_o);
 
-//        nn::lstm_static<data_t, config1, cell_act_config, recurrent_act_config>(h2_newstate, h3_oldstate, h3_newstate, c3_oldstate, c3_newstate, W3_i, W3_f, W3_c, W3_o,
-//                                                                                U3_i, U3_f, U3_c, U3_o, b3_i, b3_f, b3_c, b3_o);
+       nn::lstm_static<data_t, config1, cell_act_config, recurrent_act_config>(h2_newstate, h3_oldstate, h3_newstate, c3_oldstate, c3_newstate, W3_i, W3_f, W3_c, W3_o,
+                                                                               U3_i, U3_f, U3_c, U3_o, b3_i, b3_f, b3_c, b3_o);
         // std::cout << "h0 ";
         // for (int ii = 0; ii < N_STATES; ii++)
         //     std::cout << h0_newstate[ii] << " ";

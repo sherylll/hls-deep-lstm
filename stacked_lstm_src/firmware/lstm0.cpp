@@ -1,23 +1,14 @@
 #include "parameters.h"
 #include "lstm.h"
 #include "../../hlslib/fic_utils/fic_packet.h"
-#include "../../hls_stacked_rnn/test_image.h"
-
-struct recurrent_act_config
-{
-	typedef data_t table_t;
-	static const unsigned n_in = N_STATES * 3;
-	static const unsigned table_size = 4096;
-	static const unsigned activation_type = nn::activ_hard_sigmoid; // Keras default
-	static const unsigned unroll_factor = 64; // for unrolling hardsigmoid
-};
+#include "../../test_data/test_digit_4.h"
 
 void lstm0(ap_uint<4> rx_start,
            ap_uint<169> h0_packets[N_PACKETS])
 {
 #pragma HLS INTERFACE axis port = rx_start
 #pragma HLS INTERFACE axis port = h0_packets
-//#pragma HLS dataflow
+
     data_t W_i[N_STATES][N_INPUTS]=W_I, W_f[N_STATES][N_INPUTS]=W_F, W_c[N_STATES][N_INPUTS]=W_C, W_o[N_STATES][N_INPUTS]=W_O;
     data_t U_i[N_STATES][N_STATES]=U_I, U_f[N_STATES][N_STATES]=U_F, U_c[N_STATES][N_STATES]=U_C, U_o[N_STATES][N_STATES]=U_O;
     data_t b_i[N_STATES]=B_I, b_f[N_STATES]=B_F, b_c[N_STATES]=B_C, b_o[N_STATES]=B_O;
@@ -76,26 +67,4 @@ void lstm0(ap_uint<4> rx_start,
         timestep=0;
     	break;
     }
-
-//    if (rx_start_tmp == 0xf) // might be cause for extra latency
-//    {
-//        for (int i = 0; i < N_INPUTS; i++)
-//            test_row[i] = image_digit_4[timestep][i];
-//
-//        nn::lstm_static<data_t, config0, cell_act_config, recurrent_act_config>(test_row, h0_state, c0_state, W_i,W_f,W_c,W_o,
-//        		U_i,U_f,U_c,U_o, b_i, b_f, b_c, b_o);
-//        timestep++;
-//        fic::encoder<data_t, packet_config>(h0_state, h0_packets);
-//    }
-//    // reset memory between calls
-//    else if(rx_start_tmp == 0xe)
-//    {
-//        for (int i = 0; i < N_STATES; i++)
-//        {
-//#pragma HLS unroll
-//            h0_state[i] = 0;
-//            c0_state[i] = 0;
-//        }
-//        timestep=0;
-//    }
 }
