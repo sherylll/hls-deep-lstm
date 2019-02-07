@@ -79,7 +79,7 @@ void bidirectional_lstm(ap_uint<4> rx_start,
     {
         for (int i = 0; i < N_INPUTS; i++){
             test_row[i] = image_digit_4[iloop][i];
-            test_row_rev[N_INPUTS-i] = test_row[i];
+            test_row_rev[i] = image_digit_4[N_INPUTS-1-iloop][i];
         }
 
         nn::lstm_static<data_t, config0, cell_act_config, recurrent_act_config>(test_row, h0_oldstate, h0_newstate, c0_oldstate, c0_newstate, W_i,W_f,W_c,W_o,
@@ -88,9 +88,9 @@ void bidirectional_lstm(ap_uint<4> rx_start,
         // fic::decoder<data_t, packet_config>(packets_test, h0_newstate);
         nn::lstm_static<data_t, config1, cell_act_config, recurrent_act_config>(test_row_rev, h1_oldstate,h1_newstate, c1_oldstate,c1_newstate, W1_i,W1_f,W1_c,W1_o,
         		U1_i,U1_f,U1_c,U1_o, b1_i, b1_f, b1_c, b1_o);
+        std::cout << "h0 "; for (int ii = 0; ii < N_STATES; ii++) std::cout << h0_newstate[ii]<< " "; std::cout << std::endl;
+        std::cout << "h1 "; for (int ii = 0; ii < N_STATES; ii++) std::cout << h1_newstate[ii]<< " "; std::cout << std::endl;
     }
-
-     std::cout << "h1 "; for (int ii = 0; ii < N_STATES; ii++) std::cout << h1_newstate[ii]<< " "; std::cout << std::endl;
 
     data_t y[N_OUTPUTS] = {0};
 #pragma HLS ARRAY_PARTITION variable = y complete

@@ -14,22 +14,25 @@ def prepare_c_header(filename, macro_name):
     with open(filename, 'w+') as f:
         f.write(new_header)
 
-def save_lstm_headers(path):        
+def save_lstm_headers(path, cell_number=0):        
     print('generating headers...')
-    prepare_c_header(path+'/W_i.h', 'W_I')
-    prepare_c_header(path+'/W_f.h', 'W_F')
-    prepare_c_header(path+'/W_c.h', 'W_C')
-    prepare_c_header(path+'/W_o.h', 'W_O')
+    cell_num_str = ''
+    if cell_number:
+        cell_num_str = str(cell_number)
+    prepare_c_header(path+'/W_i.h', 'W'+cell_num_str+'_I')
+    prepare_c_header(path+'/W_f.h', 'W'+cell_num_str+'_F')
+    prepare_c_header(path+'/W_c.h', 'W'+cell_num_str+'_C')
+    prepare_c_header(path+'/W_o.h', 'W'+cell_num_str+'_O')
 
-    prepare_c_header(path+'/U_i.h', 'U_I')
-    prepare_c_header(path+'/U_f.h', 'U_F')
-    prepare_c_header(path+'/U_c.h', 'U_C')
-    prepare_c_header(path+'/U_o.h', 'U_O')
+    prepare_c_header(path+'/U_i.h', 'U'+cell_num_str+'_I')
+    prepare_c_header(path+'/U_f.h', 'U'+cell_num_str+'_F')
+    prepare_c_header(path+'/U_c.h', 'U'+cell_num_str+'_C')
+    prepare_c_header(path+'/U_o.h', 'U'+cell_num_str+'_O')
 
-    prepare_c_header(path+'/b_i.h', 'B_I')
-    prepare_c_header(path+'/b_f.h', 'B_F')
-    prepare_c_header(path+'/b_c.h', 'B_C')
-    prepare_c_header(path+'/b_o.h', 'B_O')
+    prepare_c_header(path+'/b_i.h', 'B'+cell_num_str+'_I')
+    prepare_c_header(path+'/b_f.h', 'B'+cell_num_str+'_F')
+    prepare_c_header(path+'/b_c.h', 'B'+cell_num_str+'_C')
+    prepare_c_header(path+'/b_o.h', 'B'+cell_num_str+'_O')
 
 def save_lstm_weights_to_txt(path, weights, hidden_size, if_header_gen=False):
     # save keras parameters as file
