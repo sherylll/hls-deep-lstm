@@ -40,6 +40,6 @@ int main()
 {
 	data_t probs[N_OUTPUTS];
 
-	bidirectional_lstm(0x0f,probs);
+	stacked_lstm(0x0f,probs);
 	std::cout << max_likelihood(probs);
 }

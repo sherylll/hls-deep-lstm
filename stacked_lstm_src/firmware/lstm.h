@@ -25,7 +25,7 @@
 
 #include "parameters.h"
 
-void bidirectional_lstm(ap_uint<4> rx_start,
+void stacked_lstm(ap_uint<4> rx_start,
     data_t res[N_OUTPUTS]);
 
 #endif
