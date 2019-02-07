@@ -51,9 +51,8 @@ def train():
               validation_data=[x_test, y_test])
 
     weights = model.get_weights()
-    for w in weights:
-        print(w.shape)
-
+    # for w in weights:
+    #     print(w.shape)
     save_lstm_weights_to_txt('stacked_lstm_weights/cell0', weights[:3], hidden_size)
     save_lstm_weights_to_txt('stacked_lstm_weights/cell1', weights[3:6], hidden_size)
     save_lstm_weights_to_txt('stacked_lstm_weights/cell2', weights[6:9], hidden_size)
@@ -68,22 +67,21 @@ def test():
     [W2_i, W2_f, W2_c, W2_o, U2_i, U2_f, U2_c, U2_o, b2_i, b2_f,b2_c,b2_o] = load_lstm_weights_from_txt('stacked_lstm_weights/cell2', hidden_size)
     [W3_i, W3_f, W3_c, W3_o, U3_i, U3_f, U3_c, U3_o, b3_i, b3_f,b3_c,b3_o] = load_lstm_weights_from_txt('stacked_lstm_weights/cell3', hidden_size)
 
-    Why = np.loadtxt('bi_lstm_weights/fc/Why.h', delimiter=',')
-    by = np.loadtxt('bi_lstm_weights/fc/by.h', delimiter=',',usecols=range(num_classes)).flatten()
+    Why = np.loadtxt('stacked_lstm_weights/fc/Why.h', delimiter=',')
+    by = np.loadtxt('stacked_lstm_weights/fc/by.h', delimiter=',',usecols=range(num_classes)).flatten()
 
-    h0, h1, h2, h3={}
+    h0, h1, h2, h3={}, {}, {}, {}
     h0[-1] = np.zeros(hidden_size)
     h1[-1] = np.zeros(hidden_size)
     h2[-1] = np.zeros(hidden_size)
     h3[-1] = np.zeros(hidden_size)
 
-    c0,c1,c2,c3={}
+    c0,c1,c2,c3={}, {}, {}, {}
     c0[-1] = np.zeros(hidden_size)
     c1[-1] = np.zeros(hidden_size)
     c2[-1] = np.zeros(hidden_size)
     c3[-1] = np.zeros(hidden_size)
 
-    y={}
     from models import my_lstm
     counter = 0
     for i in range(len(x_test)):
@@ -100,33 +98,31 @@ def test():
 
 def write_good_values(path_test_data, path_written_data):
     # first layer
-    [W_i, W_f, W_c, W_o, U_i, U_f, U_c, U_o, b_i, b_f,b_c,b_o] = load_lstm_weights_from_txt('bi_lstm_weights/cell0', hidden_size)
+    [W_i, W_f, W_c, W_o, U_i, U_f, U_c, U_o, b_i, b_f,b_c,b_o] = load_lstm_weights_from_txt('stacked_lstm_weights/cell0', hidden_size)
     # second layer
     [W1_i, W1_f, W1_c, W1_o, U1_i, U1_f, U1_c, U1_o, b1_i, b1_f,b1_c,b1_o] = load_lstm_weights_from_txt('stacked_lstm_weights/cell1', hidden_size)
     [W2_i, W2_f, W2_c, W2_o, U2_i, U2_f, U2_c, U2_o, b2_i, b2_f,b2_c,b2_o] = load_lstm_weights_from_txt('stacked_lstm_weights/cell2', hidden_size)
     [W3_i, W3_f, W3_c, W3_o, U3_i, U3_f, U3_c, U3_o, b3_i, b3_f,b3_c,b3_o] = load_lstm_weights_from_txt('stacked_lstm_weights/cell3', hidden_size)
 
-    Why = np.loadtxt('bi_lstm_weights/fc/Why.h', delimiter=',')
-    by = np.loadtxt('bi_lstm_weights/fc/by.h', delimiter=',',usecols=range(num_classes)).flatten()
+    Why = np.loadtxt('stacked_lstm_weights/fc/Why.h', delimiter=',')
+    by = np.loadtxt('stacked_lstm_weights/fc/by.h', delimiter=',',usecols=range(num_classes)).flatten()
 
-    h0, h1, h2, h3={}
+    h0, h1, h2, h3={}, {}, {}, {}
     h0[-1] = np.zeros(hidden_size)
     h1[-1] = np.zeros(hidden_size)
     h2[-1] = np.zeros(hidden_size)
     h3[-1] = np.zeros(hidden_size)
 
-    c0,c1,c2,c3={}
+    c0,c1,c2,c3={}, {}, {}, {}
     c0[-1] = np.zeros(hidden_size)
     c1[-1] = np.zeros(hidden_size)
     c2[-1] = np.zeros(hidden_size)
     c3[-1] = np.zeros(hidden_size)
 
-    y={}
     from models import my_lstm
-
     test_image=np.loadtxt(path_test_data, delimiter=',')
     for t in range(28):
-        (h0[t],c0[t])=my_lstm(x_test[i][t], h0[t-1], c0[t-1], W_i, W_f, W_c, W_o, U_i, U_f, U_c, U_o,b_i, b_f, b_c, b_o)
+        (h0[t],c0[t])=my_lstm(test_image[t], h0[t-1], c0[t-1], W_i, W_f, W_c, W_o, U_i, U_f, U_c, U_o,b_i, b_f, b_c, b_o)
         (h1[t],c1[t])=my_lstm(h0[t], h1[t-1], c1[t-1], W1_i, W1_f, W1_c, W1_o, U1_i, U1_f, U1_c, U1_o, b1_i, b1_f, b1_c, b1_o)
         (h2[t],c2[t])=my_lstm(h1[t], h2[t-1], c2[t-1], W2_i, W2_f, W2_c, W2_o, U2_i, U2_f, U2_c, U2_o, b2_i, b2_f, b2_c, b2_o)
         (h3[t],c3[t])=my_lstm(h2[t], h3[t-1], c3[t-1], W3_i, W3_f, W3_c, W3_o, U3_i, U3_f, U3_c, U3_o, b3_i, b3_f, b3_c, b3_o)
