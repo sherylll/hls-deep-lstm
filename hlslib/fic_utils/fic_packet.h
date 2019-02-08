@@ -5,7 +5,8 @@ namespace fic
 template<class data_T, typename CONFIG_T>
 void encoder(
     data_T input[CONFIG_T::n_data],
-    ap_uint<169> output[CONFIG_T::n_packets])
+    ap_uint<169> output[CONFIG_T::n_packets],
+    ap_uint<16> slot_id = 0) // defaults to slot 0
 {
 #pragma HLS PIPELINE
     ap_uint<169> tmp;
@@ -15,6 +16,7 @@ void encoder(
         {
             tmp(127 - CONFIG_T::len_data * i, 128-CONFIG_T::len_data * (i+1)) = input[p*CONFIG_T::n_chunks+i].range(); // MSB first
         }
+        tmp(168,153) = slot_id; 
         output[p] = tmp;
     }
 }

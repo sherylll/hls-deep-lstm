@@ -47,7 +47,7 @@ void lstm2(ap_uint<169> h1_in[N_PACKETS],
     nn::lstm_static<data_t, config1, cell_act_config, recurrent_act_config>(h1_state, h2_oldstate,h2_newstate, c2_oldstate,c2_newstate, W2_i,W2_f,W2_c,W2_o,
         U2_i,U2_f,U2_c,U2_o, b2_i, b2_f, b2_c, b2_o);
     timestep++;
-    fic::encoder<data_t, packet_config>(h2_newstate, h2_out);
+    fic::encoder<data_t, packet_config>(h2_newstate, h2_out,id_fic6);
 
     // reset memory between calls
     if (timestep == N_LOOP)

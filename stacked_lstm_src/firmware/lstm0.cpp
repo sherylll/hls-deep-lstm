@@ -53,7 +53,7 @@ void lstm0(ap_uint<4> rx_start,
         nn::lstm_static<data_t, config0, cell_act_config, recurrent_act_config>(test_row, h0_oldstate, h0_newstate, c0_oldstate, c0_newstate, W_i,W_f,W_c,W_o,
         		U_i,U_f,U_c,U_o, b_i, b_f, b_c, b_o);
         timestep++;
-        fic::encoder<data_t, packet_config>(h0_newstate, h0_packets);
+        fic::encoder<data_t, packet_config>(h0_newstate, h0_packets,id_fic8);
     	break;
     case 0xe:
         for (int i = 0; i < N_STATES; i++)

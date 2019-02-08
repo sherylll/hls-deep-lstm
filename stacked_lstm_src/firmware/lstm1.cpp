@@ -47,16 +47,11 @@ void lstm1(ap_uint<169> h0_in[N_PACKETS],
     nn::lstm_static<data_t, config1, cell_act_config, recurrent_act_config>(h0_state, h1_oldstate,h1_newstate, c1_oldstate,c1_newstate, W1_i,W1_f,W1_c,W1_o,
         U1_i,U1_f,U1_c,U1_o, b1_i, b1_f, b1_c, b1_o);
     timestep++;
-    fic::encoder<data_t, packet_config>(h1_newstate, h1_out);
+    fic::encoder<data_t, packet_config>(h1_newstate, h1_out,id_fic7);
 
     // reset memory between calls
     if (timestep == N_LOOP)
     {
-//         for (int i=0; i<N_STATES; i++){
-// #pragma HLS unroll
-//     		h1_out[i] = h1_newstate[i];
-//     	}
-
         for (int i = 0; i < N_STATES; i++)
         {
         #pragma HLS unroll

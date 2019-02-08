@@ -78,6 +78,11 @@ typedef ap_fixed<16, 4> data_t;
 #define N_STATES 128
 #define N_OUTPUTS 10
 
+// slot id of packets coming from ficx
+static ap_uint<16> id_fic8 = 1;
+static ap_uint<16> id_fic7 = 2;
+static ap_uint<16> id_fic6 = 3;
+
 struct packet_config
 {
 	static const unsigned n_data = N_STATES;
