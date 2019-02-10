@@ -128,6 +128,15 @@ struct cell_act_config
 	static const unsigned activation_type = nn::activ_tanh;
 };
 
+struct recurrent_act_config
+{
+	typedef data_t table_t;
+	static const unsigned n_in = N_STATES * 3;
+	static const unsigned table_size = 4096;
+	static const unsigned activation_type = nn::activ_hard_sigmoid; // Keras default
+	static const unsigned unroll_factor = 64; // for unrolling hardsigmoid
+};
+
 struct softmax_config
 {
 	static const unsigned n_in = N_OUTPUTS;
