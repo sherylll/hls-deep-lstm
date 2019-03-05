@@ -15,14 +15,11 @@ h1 64636 1001 521 905 1027 64939 63507 990 65220 619 1767 552 65254 65410 63827 
 #include "../../hlslib/fic_utils/fic_packet.h"
 #include "../../test_data/test_digit_4.h"
 
-
 void bidirectional_lstm(ap_uint<4> rx_start,
                data_t res[N_OUTPUTS])
 {
 #pragma HLS INTERFACE axis port = rx_start
 #pragma HLS INTERFACE axis port = res
-
-#pragma HLS ARRAY_RESHAPE variable = res complete dim = 1
 
     data_t Why[N_OUTPUTS][2*N_STATES] = WHY;
     data_t by[N_OUTPUTS] = BY;
@@ -35,23 +32,38 @@ void bidirectional_lstm(ap_uint<4> rx_start,
     data_t U1_i[N_STATES][N_STATES]=U1_I, U1_f[N_STATES][N_STATES]=U1_F, U1_c[N_STATES][N_STATES]=U1_C, U1_o[N_STATES][N_STATES]=U1_O;
     data_t b1_i[N_STATES]=B1_I, b1_f[N_STATES]=B1_F, b1_c[N_STATES]=B1_C, b1_o[N_STATES]=B1_O;
 
-// #pragma HLS ARRAY_PARTITION variable = W_i complete dim = 2
-// #pragma HLS ARRAY_PARTITION variable = W_f complete dim = 2
-// #pragma HLS ARRAY_PARTITION variable = W_c complete dim = 2
-// #pragma HLS ARRAY_PARTITION variable = W_o complete dim = 2
-//
-// #pragma HLS ARRAY_PARTITION variable = U_i complete dim = 2
-// #pragma HLS ARRAY_PARTITION variable = U_f complete dim = 2
-// #pragma HLS ARRAY_PARTITION variable = U_c complete dim = 2
-// #pragma HLS ARRAY_PARTITION variable = U_o complete dim = 2
-//
-// #pragma HLS ARRAY_PARTITION variable = b_i complete dim = 1
-// #pragma HLS ARRAY_PARTITION variable = b_f complete dim = 1
-// #pragma HLS ARRAY_PARTITION variable = b_c complete dim = 1
-// #pragma HLS ARRAY_PARTITION variable = b_o complete dim = 1
-//
-//#pragma HLS ARRAY_PARTITION variable = Why complete dim = 2
-// #pragma HLS ARRAY_PARTITION variable = by complete
+ #pragma HLS ARRAY_PARTITION variable = W_i complete dim = 2
+ #pragma HLS ARRAY_PARTITION variable = W_f complete dim = 2
+ #pragma HLS ARRAY_PARTITION variable = W_c complete dim = 2
+ #pragma HLS ARRAY_PARTITION variable = W_o complete dim = 2
+
+ #pragma HLS ARRAY_PARTITION variable = U_i cyclic factor=32 dim = 2
+ #pragma HLS ARRAY_PARTITION variable = U_f cyclic factor=32 dim = 2
+ #pragma HLS ARRAY_PARTITION variable = U_c cyclic factor=32 dim = 2
+ #pragma HLS ARRAY_PARTITION variable = U_o cyclic factor=32 dim = 2
+
+ #pragma HLS ARRAY_PARTITION variable = b_i cyclic factor=32 dim = 1
+ #pragma HLS ARRAY_PARTITION variable = b_f cyclic factor=32 dim = 1
+ #pragma HLS ARRAY_PARTITION variable = b_c cyclic factor=32 dim = 1
+ #pragma HLS ARRAY_PARTITION variable = b_o cyclic factor=32 dim = 1
+
+#pragma HLS ARRAY_PARTITION variable = W1_i complete dim = 2
+#pragma HLS ARRAY_PARTITION variable = W1_f complete dim = 2
+#pragma HLS ARRAY_PARTITION variable = W1_c complete dim = 2
+#pragma HLS ARRAY_PARTITION variable = W1_o complete dim = 2
+
+#pragma HLS ARRAY_PARTITION variable = U1_i cyclic factor=32 dim = 2
+#pragma HLS ARRAY_PARTITION variable = U1_f cyclic factor=32 dim = 2
+#pragma HLS ARRAY_PARTITION variable = U1_c cyclic factor=32 dim = 2
+#pragma HLS ARRAY_PARTITION variable = U1_o cyclic factor=32 dim = 2
+
+#pragma HLS ARRAY_PARTITION variable = b1_i cyclic factor=32 dim = 1
+#pragma HLS ARRAY_PARTITION variable = b1_f cyclic factor=32 dim = 1
+#pragma HLS ARRAY_PARTITION variable = b1_c cyclic factor=32 dim = 1
+#pragma HLS ARRAY_PARTITION variable = b1_o cyclic factor=32 dim = 1
+
+#pragma HLS ARRAY_PARTITION variable = Why complete dim = 2
+ #pragma HLS ARRAY_PARTITION variable = by complete
 
     static data_t h0_oldstate[N_STATES] = {0};
     static data_t c0_oldstate[N_STATES] = {0};
@@ -63,22 +75,28 @@ void bidirectional_lstm(ap_uint<4> rx_start,
     static data_t h1_newstate[N_STATES] = {0};
     static data_t c1_newstate[N_STATES] = {0};
 
-// #pragma HLS ARRAY_PARTITION variable = h0_state complete
-// #pragma HLS ARRAY_PARTITION variable = c0_state complete
-//#pragma HLS ARRAY_PARTITION variable = h1_state complete
-//#pragma HLS ARRAY_PARTITION variable = c1_state complete
+ #pragma HLS ARRAY_PARTITION variable = h0_oldstate cyclic factor=32
+ #pragma HLS ARRAY_PARTITION variable = c0_oldstate cyclic factor=32
+#pragma HLS ARRAY_PARTITION variable = h1_oldstate cyclic factor=32
+#pragma HLS ARRAY_PARTITION variable = c1_oldstate cyclic factor=32
+
+#pragma HLS ARRAY_PARTITION variable = h0_newstate cyclic factor=32
+#pragma HLS ARRAY_PARTITION variable = c0_newstate cyclic factor=32
+#pragma HLS ARRAY_PARTITION variable = h1_newstate cyclic factor=32
+#pragma HLS ARRAY_PARTITION variable = c1_newstate cyclic factor=32
 
     data_t test_row[N_INPUTS];
     data_t test_row_rev[N_INPUTS];
-#pragma HLS ARRAY_PARTITION variable = test_row complete
-#pragma HLS ARRAY_PARTITION variable=image_digit_4 complete dim=2
+#pragma HLS ARRAY_PARTITION variable=test_row cyclic factor=4
+#pragma HLS ARRAY_PARTITION variable=test_row_rev cyclic factor=4
+#pragma HLS ARRAY_PARTITION variable=image_digit_4 cyclic factor=4 dim=2
 
     ap_uint<169> packets_test[16];
     for (int iloop = 0; iloop < N_LOOP; iloop++)
     {
         for (int i = 0; i < N_INPUTS; i++){
             test_row[i] = image_digit_4[iloop][i];
-            test_row_rev[i] = image_digit_4[N_INPUTS-1-iloop][i];
+//            test_row_rev[i] = image_digit_4[N_INPUTS-1-iloop][i];
         }
 
         nn::lstm_static<data_t, config0, cell_act_config, recurrent_act_config>(test_row, h0_oldstate, h0_newstate, c0_oldstate, c0_newstate, W_i,W_f,W_c,W_o,
@@ -91,14 +109,16 @@ void bidirectional_lstm(ap_uint<4> rx_start,
 //        std::cout << "h1 "; for (int ii = 0; ii < N_STATES; ii++) std::cout << h1_newstate[ii].range()<< " "; std::cout << std::endl;
     }
 
-//    data_t y[N_OUTPUTS] = {0};
-//#pragma HLS ARRAY_PARTITION variable = y complete
-//    data_t h_concat[N_STATES*2];
-//    for (int i=0; i<N_STATES; i++)
-//    {
-//        h_concat[i] = h0_newstate[i];
-//        h_concat[i+N_STATES] = h1_newstate[i];
-//    }
+    data_t y[N_OUTPUTS] = {0};
+#pragma HLS ARRAY_PARTITION variable = y complete
+    data_t h_concat[N_STATES*2];
+#pragma HLS ARRAY_PARTITION variable = h_concat complete
+    for (int i=0; i<N_STATES; i++)
+    {
+#pragma HLS unroll
+        h_concat[i] = h0_newstate[i];
+        h_concat[i+N_STATES] = h1_newstate[i];
+    }
 //    nn::fc<data_t, config1::n_state * 2, config1::n_out>(Why, h_concat, by, y);
 //    nn::softmax<data_t, data_t, softmax_config>(y, res);
 //
