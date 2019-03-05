@@ -67,7 +67,7 @@ struct config0 : nn::lstm_config
 	static const unsigned n_state = N_STATES;
 	static const unsigned unroll_factor = 32; // unroll factor of cell update loop
 	static const unsigned partition_factor = 64;
-//        static const unsigned n_out = N_OUTPUTS;
+        static const unsigned n_out = N_OUTPUTS;
 };
 
 struct config1 : nn::lstm_config

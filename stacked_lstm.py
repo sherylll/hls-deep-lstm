@@ -51,8 +51,8 @@ def train():
               validation_data=[x_test, y_test])
 
     weights = model.get_weights()
-    # for w in weights:
-    #     print(w.shape)
+    # model.save_weights('stacked_lstm_weights/weights.h5')
+
     save_lstm_weights_to_txt('stacked_lstm_weights/cell0', weights[:3], hidden_size)
     save_lstm_weights_to_txt('stacked_lstm_weights/cell1', weights[3:6], hidden_size)
     save_lstm_weights_to_txt('stacked_lstm_weights/cell2', weights[6:9], hidden_size)
