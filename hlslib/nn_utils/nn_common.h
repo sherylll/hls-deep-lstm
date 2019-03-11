@@ -74,12 +74,10 @@ void fc(data_T mat[row][col], data_T vec[col],
     }
 }
 
-template <class data_T, unsigned int col, unsigned int row>
-void fc_no_b(data_T mat[row][col], data_T vec[col], data_T res[row])
+template <class data_T, class res_T, unsigned int col, unsigned int row>
+void fc_no_b(data_T mat[row][col], data_T vec[col], res_T res[row])
 {
-    data_T Wly_dot_h_sum = 0;
-//    data_T Wly_dot_h[col];
-
+    res_T Wly_dot_h_sum = 0;
 //#pragma HLS ARRAY_PARTITION variable = Wly_dot_h complete dim = 1 // TODO make this configurable
     for (int i = 0; i < row; i++)
     {
@@ -87,15 +85,10 @@ void fc_no_b(data_T mat[row][col], data_T vec[col], data_T res[row])
         Wly_dot_h_sum = 0;
         for (int j = 0; j < col; j++)
         {
-//            Wly_dot_h[j] = mat[i][j] * vec[j];
         	data_T temp = mat[i][j] * vec[j];
-#pragma HLS RESOURCE variable=temp core=Mul_LUT
+// #pragma HLS RESOURCE variable=temp core=Mul_LUT
         	Wly_dot_h_sum = temp+Wly_dot_h_sum;
-//        	Wly_dot_h_sum += mat[i][j] * vec[j];
         }
-
-        // used due to arr len = 100, optimal #steps should be sqrt(arr_len)
-//        nn::step10_sum<data_T>(Wly_dot_h, &Wly_dot_h_sum, col);
         res[i] = Wly_dot_h_sum;
     }
 }

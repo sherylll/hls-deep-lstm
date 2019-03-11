@@ -140,16 +140,16 @@ void lstm_static(data_T data[CONFIG_T::n_in],
     	data_temp[i]=data[i];
 
     // [W_i, W_f, W_c, W_o] * x + [b_i, b_f, b_c, b_o]
-    fc_no_b<data_T, CONFIG_T::n_in, CONFIG_T::n_state>(param_i, data_temp, fc_i);
-    fc_no_b<data_T, CONFIG_T::n_in, CONFIG_T::n_state>(param_f, data_temp, fc_f);
-    fc_no_b<data_T, CONFIG_T::n_in, CONFIG_T::n_state>(param_c, data_temp, fc_c);
-    fc_no_b<data_T, CONFIG_T::n_in, CONFIG_T::n_state>(param_o, data_temp, fc_o);
+    fc_no_b<data_T, data_T, CONFIG_T::n_in, CONFIG_T::n_state>(param_i, data_temp, fc_i);
+    fc_no_b<data_T, data_T,CONFIG_T::n_in, CONFIG_T::n_state>(param_f, data_temp, fc_f);
+    fc_no_b<data_T, data_T,CONFIG_T::n_in, CONFIG_T::n_state>(param_c, data_temp, fc_c);
+    fc_no_b<data_T, data_T,CONFIG_T::n_in, CONFIG_T::n_state>(param_o, data_temp, fc_o);
 
     // [U_i, U_f, U_c, U_o] * h
-    fc_no_b<data_T, CONFIG_T::n_state, CONFIG_T::n_state>(param_r_i, h_oldstate, fc_i_state);
-    fc_no_b<data_T, CONFIG_T::n_state, CONFIG_T::n_state>(param_r_f, h_oldstate, fc_f_state);
-    fc_no_b<data_T, CONFIG_T::n_state, CONFIG_T::n_state>(param_r_c, h_oldstate, fc_c_state);
-    fc_no_b<data_T, CONFIG_T::n_state, CONFIG_T::n_state>(param_r_o, h_oldstate, fc_o_state);
+    fc_no_b<data_T, data_T,CONFIG_T::n_state, CONFIG_T::n_state>(param_r_i, h_oldstate, fc_i_state);
+    fc_no_b<data_T, data_T,CONFIG_T::n_state, CONFIG_T::n_state>(param_r_f, h_oldstate, fc_f_state);
+    fc_no_b<data_T,data_T, CONFIG_T::n_state, CONFIG_T::n_state>(param_r_c, h_oldstate, fc_c_state);
+    fc_no_b<data_T,data_T, CONFIG_T::n_state, CONFIG_T::n_state>(param_r_o, h_oldstate, fc_o_state);
 
     // [W_i, W_f, W_c, W_o] * x + [U_i, U_f,U_c, U_o] * x + [b_i, b_f, b_c, b_o]
     for (int i=0; i<CONFIG_T::n_state; i++)
@@ -170,9 +170,7 @@ void lstm_static(data_T data[CONFIG_T::n_in],
     if (ACT_CONFIG_C::activation_type == activ_tanh)
     {
         // TODO change to table after quant.
-//        for (int i = 0; i < CONFIG_T::n_state; i++)
-//#pragma HLS pipeline
-//            tmpres_c[i] = hls::tanh((float)inputacc_c[i]);
+    	// use hls::tanh() for floats
     	tanh<data_T, data_T, ACT_CONFIG_C>(inputacc_c, tmpres_c);
     }
 
@@ -190,10 +188,6 @@ CELL_UPDATE_LOOP:for (int iacc = 0; iacc < (CONFIG_T::n_state); iacc++)
     // h = act(c) * o
     if (ACT_CONFIG_C::activation_type == activ_tanh)
     {
-        // TODO change to table after quant.
-//        for (int i = 0; i < CONFIG_T::n_state; i++)
-//#pragma HLS pipeline
-//            s_actstate[i] = hls::tanh((float)s_newstate[i]);
     	tanh<data_T, data_T, ACT_CONFIG_C>(s_newstate, s_actstate);
     }
 

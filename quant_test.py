@@ -12,7 +12,7 @@ from weight_saver import *
 
 batch_size = 64
 num_classes = 10
-epochs = 1
+epochs = 10
 hidden_size = 128
 # input image dimensions
 img_rows, img_cols = 28, 28
@@ -85,7 +85,7 @@ def quantize():
     max_vals["params"] = max(max_params)
     return max_vals
 
-def generate_datatype(max_vals):
+def generate_datatype(max_vals, header_path):
     min_int_len = 2
     # max_word_len = 16
     frac_len = 8    
@@ -104,8 +104,8 @@ def generate_datatype(max_vals):
         g_int = int_bits(gate_max_vals[3])
         typedef_str = typedef_builder(frac_len + Wg_x_int, Wg_x_int, "W" + gate_name + "_x") 
         typedef_str += typedef_builder(frac_len + Ug_x_int, Ug_x_int, "U" + gate_name + "_x") 
-        typedef_str += typedef_builder(frac_len + Wg_x_int, g_in_int, gate_name + "_x") 
-        typedef_str += typedef_builder(frac_len + Wg_x_int, g_int, gate_name) 
+        typedef_str += typedef_builder(frac_len + g_in_int, g_in_int, gate_name + "_x") 
+        typedef_str += typedef_builder(frac_len + g_int, g_int, gate_name) 
         return typedef_str
 
     header_file = typedef_builder(frac_len + min_int_len, min_int_len, "data") # input data already normalized
@@ -136,7 +136,7 @@ def generate_datatype(max_vals):
     header_file += typedef_builder(frac_len + why_h_int, why_h_int, "why_h") 
     header_file += typedef_builder(frac_len + y_int, y_int, "y") 
 
-    with open("quant_test/parameter.h", "w") as hfile:
+    with open(header_path, "w") as hfile:
         hfile.write(header_file)
 
 def write_good_values(path_test_data, path_written_data):
@@ -169,8 +169,7 @@ def write_good_values(path_test_data, path_written_data):
     save_fc_headers('quant_test')    
 
 if __name__ == '__main__':
-    # train()
-    # print(quantize())
+    train()
     # max_vals = {'f': np.array([1.83959453, 3.28938675, 4.82716574, 1.]), 
     #             'i': np.array([2.70473551, 3.08807776, 3.74156579, 1.]), 
     #             'o': np.array([2.14282328, 4.57429092, 5.37502692, 1.]), 
@@ -179,7 +178,8 @@ if __name__ == '__main__':
     #             'h_new': np.array([1., 0.99999998]),
     #             'params': 1.2323434352874756}
     max_vals = quantize()
-    generate_datatype(max_vals)
+    print(max_vals)
+    generate_datatype(max_vals, './quant_test/param_types.h')
     write_good_values("./test_data/test_digit_4.txt", './quant_test/hidden_states_digit_4_single.txt')
 
     # Wf_dot_x Uf_dot_h f_in f [1.83959453, 3.28938675, 4.82716574, 1. ]
