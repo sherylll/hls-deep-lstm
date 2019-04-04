@@ -39,7 +39,7 @@ void vanilla_rnn(data_T Wxh[CONFIG_T::n_state][CONFIG_T::n_in],
                  data_T data[CONFIG_T::n_in])
 {
     data_T Wxh_dot_x_sum, Whh_dot_h_sum;
-    data_T Wxh_dot_x[CONFIG_T::n_in], Whh_dot_h[CONFIG_T::n_state];
+    data_T Wxh_dot_x, Whh_dot_h;
 #pragma HLS ARRAY_PARTITION variable = Wxh_dot_x complete dim = 1
 #pragma HLS ARRAY_PARTITION variable = Whh_dot_h cyclic factor = 10 dim = 1
     data_T h_tmp_in[CONFIG_T::n_state];
@@ -53,17 +53,19 @@ forward_label0:
         Whh_dot_h_sum = 0;
         for (int j = 0; j < CONFIG_T::n_in; j++)
         {
-            Wxh_dot_x[j] = Wxh[i][j] * data[j];
+            Wxh_dot_x = Wxh[i][j] * data[j];
+            Wxh_dot_x_sum += Wxh_dot_x;
         }
 
         for (int j = 0; j < CONFIG_T::n_state; j++)
         {
-            Whh_dot_h[j] = Whh[i][j] * h_last[j];
+            Whh_dot_h = Whh[i][j] * h_last[j];
+            Whh_dot_h_sum += Whh_dot_h;
         }
 
-        step10_sum<data_T>(Wxh_dot_x, &Wxh_dot_x_sum, CONFIG_T::n_in);
+//        step10_sum<data_T>(Wxh_dot_x, &Wxh_dot_x_sum, CONFIG_T::n_in);
 
-        step10_sum<data_T>(Whh_dot_h, &Whh_dot_h_sum, CONFIG_T::n_state);
+//        step10_sum<data_T>(Whh_dot_h, &Whh_dot_h_sum, CONFIG_T::n_state);
 
         h_tmp_in[i] = Wxh_dot_x_sum + Whh_dot_h_sum + bh[i];
 //        h_curr[i] = hls::tanh((float)h_tmp_in);
@@ -110,48 +112,33 @@ void lstm_static(data_T data[CONFIG_T::n_in],
 				 typename CONFIG_T::bias_T param_b_c[CONFIG_T::n_state],
 				 typename CONFIG_T::bias_T param_b_o[CONFIG_T::n_state])
 {
-//#pragma HLS function_instantiate variable=param_i,param_f,param_c,param_o,param_r_i,param_r_f,param_r_c,param_r_o,param_b_i,param_b_f,param_b_c,param_b_o
 	lstm_T fc_i[CONFIG_T::n_state], fc_f[CONFIG_T::n_state], fc_c[CONFIG_T::n_state], fc_o[CONFIG_T::n_state];
 	lstm_T fc_i_state[CONFIG_T::n_state], fc_f_state[CONFIG_T::n_state], fc_c_state[CONFIG_T::n_state], fc_o_state[CONFIG_T::n_state];
-#pragma HLS ARRAY_PARTITION variable = fc_i,fc_f,fc_c,fc_o cyclic factor=CONFIG_T::partition_factor
-#pragma HLS ARRAY_PARTITION variable = fc_i_state,fc_f_state,fc_c_state,fc_o_state cyclic factor=CONFIG_T::partition_factor
+#pragma HLS ARRAY_PARTITION variable = fc_i,fc_f,fc_c,fc_o complete
+#pragma HLS ARRAY_PARTITION variable = fc_i_state,fc_f_state,fc_c_state,fc_o_state complete
 
 	lstm_T tmpres_ifo[CONFIG_T::n_state * 3];   // activated i,f,o matrices (input, forget output)
 	lstm_T tmpres_c[CONFIG_T::n_state];         // activated c-matrix (keras notation)
 	lstm_T inputacc_ifo[CONFIG_T::n_state * 3]; // i,f,o matrices (keras notation)
 	lstm_T inputacc_c[CONFIG_T::n_state];       // c-matrix (keras notation)
 	lstm_T s_actstate[CONFIG_T::n_state];
-
-//#pragma HLS ARRAY_PARTITION variable = tmpres_ifo cyclic factor=CONFIG_T::partition_factor
-//#pragma HLS ARRAY_PARTITION variable = tmpres_c cyclic factor=CONFIG_T::partition_factor
-//#pragma HLS ARRAY_PARTITION variable = inputacc_ifo cyclic factor=CONFIG_T::partition_factor
-//#pragma HLS ARRAY_PARTITION variable = inputacc_c cyclic factor=CONFIG_T::partition_factor
-//#pragma HLS ARRAY_PARTITION variable = s_actstate cyclic factor=CONFIG_T::partition_factor
-#pragma HLS ARRAY_PARTITION variable = tmpres_ifo,tmpres_c,inputacc_ifo,inputacc_c,s_actstate  complete
-
-    // reduce access to argument on interface
-    data_T data_temp[CONFIG_T::n_in];
-#pragma HLS ARRAY_PARTITION variable = data_temp complete
-    for (int i=0; i<CONFIG_T::n_in; i++)
-#pragma HLS unroll
-    	data_temp[i]=data[i];
+#pragma HLS ARRAY_PARTITION variable = tmpres_ifo,tmpres_c,inputacc_ifo,inputacc_c,s_actstate complete
+//#pragma HLS ARRAY_PARTITION variable = tmpres_ifo,tmpres_c,inputacc_ifo,inputacc_c,s_actstate  CONFIG_T::partition_factor
 
     // [W_i, W_f, W_c, W_o] * x + [b_i, b_f, b_c, b_o]
-    mat_vec_mul<typename CONFIG_T::kernel_T, data_T, lstm_T, CONFIG_T::n_in, CONFIG_T::n_state>(param_i, data_temp, fc_i);
-    mat_vec_mul<typename CONFIG_T::kernel_T, data_T,lstm_T,CONFIG_T::n_in, CONFIG_T::n_state>(param_f, data_temp, fc_f);
-    mat_vec_mul<typename CONFIG_T::kernel_T, data_T,lstm_T,CONFIG_T::n_in, CONFIG_T::n_state>(param_c, data_temp, fc_c);
-    mat_vec_mul<typename CONFIG_T::kernel_T, data_T,lstm_T,CONFIG_T::n_in, CONFIG_T::n_state>(param_o, data_temp, fc_o);
+    // save some BRAM resources
+    mat_vec_mul_4<typename CONFIG_T::kernel_T,data_T,lstm_T, CONFIG_T::n_in, CONFIG_T::n_state>(param_i,
+        		param_f,param_c,param_o, data, fc_i, fc_f, fc_c, fc_o);
 
     // [U_i, U_f, U_c, U_o] * h
-    mat_vec_mul<typename CONFIG_T::kernel_T, lstm_T,lstm_T,CONFIG_T::n_state, CONFIG_T::n_state>(param_r_i, h_oldstate, fc_i_state);
-    mat_vec_mul<typename CONFIG_T::kernel_T, lstm_T,lstm_T,CONFIG_T::n_state, CONFIG_T::n_state>(param_r_f, h_oldstate, fc_f_state);
-    mat_vec_mul<typename CONFIG_T::kernel_T,lstm_T,lstm_T, CONFIG_T::n_state, CONFIG_T::n_state>(param_r_c, h_oldstate, fc_c_state);
-    mat_vec_mul<typename CONFIG_T::kernel_T,lstm_T,lstm_T, CONFIG_T::n_state, CONFIG_T::n_state>(param_r_o, h_oldstate, fc_o_state);
+    mat_vec_mul_4<typename CONFIG_T::kernel_T,lstm_T,lstm_T, CONFIG_T::n_state, CONFIG_T::n_state>(param_r_i,
+    		param_r_f,param_r_c,param_r_o,h_oldstate, fc_i_state, fc_f_state, fc_c_state, fc_o_state);
 
     // [W_i, W_f, W_c, W_o] * x + [U_i, U_f,U_c, U_o] * x + [b_i, b_f, b_c, b_o]
     for (int i=0; i<CONFIG_T::n_state; i++)
     {
 #pragma HLS unroll
+//#pragma HLS dependence array intra WAW false
     	inputacc_ifo[i] = fc_i[i]+ fc_i_state[i] + param_b_i[i];
     	inputacc_ifo[i+CONFIG_T::n_state] = fc_f[i]+ fc_f_state[i] + param_b_f[i];
     	inputacc_ifo[i+CONFIG_T::n_state*2] = fc_o[i]+ fc_o_state[i] + param_b_o[i];
@@ -175,7 +162,6 @@ void lstm_static(data_T data[CONFIG_T::n_in],
     // c = i .* act(W_c * x + U_c * h_old + b_c) + f .* c_old
 CELL_UPDATE_LOOP:for (int iacc = 0; iacc < (CONFIG_T::n_state); iacc++)
     {
-//#pragma HLS UNROLL factor=CONFIG_T::unroll_factor
 #pragma HLS UNROLL
 	    lstm_T temp1 = tmpres_c[iacc] * tmpres_ifo[iacc];
 	    lstm_T temp2 = s_oldstate[iacc] * tmpres_ifo[iacc + (CONFIG_T::n_state)];
@@ -190,7 +176,6 @@ CELL_UPDATE_LOOP:for (int iacc = 0; iacc < (CONFIG_T::n_state); iacc++)
 
     for (int iacc = 0; iacc < CONFIG_T::n_state; iacc++)
     {
-//#pragma HLS UNROLL factor=CONFIG_T::unroll_factor
 #pragma HLS UNROLL
         h_newstate[iacc] = tmpres_ifo[iacc + 2 * (CONFIG_T::n_state)] * s_actstate[iacc];
     }

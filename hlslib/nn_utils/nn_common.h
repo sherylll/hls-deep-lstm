@@ -62,7 +62,6 @@ void fc(typename CONFIG_T::weight_t mat[CONFIG_T::n_out][CONFIG_T::n_in], data_T
 	typename CONFIG_T::accum_t accum = 0;
 	typename CONFIG_T::accum_t temp;
 
-#pragma HLS ARRAY_PARTITION variable = Wly_dot_h cyclic factor = 10 dim = 1 // TODO make this configurable
     for (int i = 0; i < CONFIG_T::n_out; i++)
     {
 #pragma HLS PIPELINE
@@ -79,19 +78,52 @@ void fc(typename CONFIG_T::weight_t mat[CONFIG_T::n_out][CONFIG_T::n_in], data_T
 template <class weight_T, class data_T, class res_T, unsigned int col, unsigned int row>
 void mat_vec_mul(weight_T mat[row][col], data_T vec[col], res_T res[row])
 {
-    res_T Wly_dot_h_sum = 0;
+#pragma HLS inline off
+    res_T dot_product = 0;
 
     for (int i = 0; i < row; i++)
     {
 #pragma HLS PIPELINE
-        Wly_dot_h_sum = 0;
+    	dot_product = 0;
         for (int j = 0; j < col; j++)
         {
         	res_T temp = mat[i][j] * vec[j];
 // #pragma HLS RESOURCE variable=temp core=Mul_LUT
-        	Wly_dot_h_sum = temp + Wly_dot_h_sum;
+        	dot_product = temp + dot_product;
         }
-        res[i] = Wly_dot_h_sum;
+        res[i] = dot_product;
+    }
+}
+
+template <class weight_T, class data_T, class res_T, unsigned int col, unsigned int row>
+void mat_vec_mul_4(weight_T mat[row][col], weight_T mat1[row][col], weight_T mat2[row][col], weight_T mat3[row][col], data_T vec[col], res_T res[row]
+																																				 , res_T res1[row], res_T res2[row], res_T res3[row])
+{
+#pragma HLS inline off
+    res_T dot_product,dot_product1,dot_product2,dot_product3;
+    res_T temp,temp1,temp2,temp3;
+
+    for (int i = 0; i < row; i++)
+    {
+#pragma HLS PIPELINE
+#pragma HLS unroll factor=2
+    	dot_product = 0; dot_product1 = 0; dot_product2 = 0; dot_product3 = 0;
+        for (int j = 0; j < col; j++)
+        {
+        	data_t x = vec[j];
+        	temp = mat[i][j] * x;
+        	dot_product = temp + dot_product;
+
+        	temp1 = mat1[i][j] * x;
+			dot_product1 = temp1 + dot_product1;
+
+			temp2 = mat2[i][j] * x;
+			dot_product2 = temp2 + dot_product2;
+
+			temp3 = mat3[i][j] * x;
+			dot_product3 = temp3 + dot_product3;
+        }
+        res[i] = dot_product; res1[i] = dot_product1;res2[i] = dot_product2;res3[i] = dot_product3;
     }
 }
 } // namespace nn

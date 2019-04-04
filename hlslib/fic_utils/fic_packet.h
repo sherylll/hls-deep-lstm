@@ -39,7 +39,8 @@ void decoder(
     }
 }
 
-/* this encoder tries to occupy all 8 slots */
+/* this encoder tries to occupy all 8 slots
+ * NOT SURE IF USEFUL*/
 template<class data_T, typename CONFIG_T>
 void greedy_encoder(
     data_T input[CONFIG_T::n_data],
