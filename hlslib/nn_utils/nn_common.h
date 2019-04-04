@@ -18,6 +18,14 @@ enum activ_type
     activ_hard_sigmoid
 };
 
+struct tanh_act_config
+{
+        typedef ap_fixed<16,6> table_t;
+        static const unsigned n_in = 64;
+        static const unsigned table_size = 2048;
+        static const unsigned activation_type = nn::activ_tanh;
+};
+
 // workaround to pipeline fp accumulation; n_steps = sqrt(arr_size)
 // template <class data_T>
 // void step10_sum(data_T *arr, data_T *sum, int len)

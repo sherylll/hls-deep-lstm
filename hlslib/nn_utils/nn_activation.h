@@ -39,6 +39,7 @@ namespace nn
 // *************************************************
 //       TanH Activation
 // *************************************************
+
 template<typename CONFIG_T, int N_TABLE>
 void init_tanh_table(typename CONFIG_T::table_t table_out[N_TABLE])
 {
