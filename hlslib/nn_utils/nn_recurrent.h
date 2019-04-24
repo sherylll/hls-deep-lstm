@@ -140,7 +140,7 @@ void lstm_static(data_T data[CONFIG_T::n_in],
 CELL_UPDATE_LOOP:for (int iacc = 0; iacc < (CONFIG_T::n_state); iacc++)
     {
 #pragma HLS UNROLL
-	    lstm_T temp1 = tmpres_c[iacc] * tmpres_ifo[iacc];
+		lstm_T temp1 = tmpres_c[iacc] * tmpres_ifo[iacc];
 	    lstm_T temp2 = s_oldstate[iacc] * tmpres_ifo[iacc + (CONFIG_T::n_state)];
         s_newstate[iacc] = temp1+temp2;
     }
@@ -169,9 +169,9 @@ CELL_UPDATE_LOOP:for (int iacc = 0; iacc < (CONFIG_T::n_state); iacc++)
 
 
 template <class data_T, class lstm_T, typename CONFIG_T, typename ACT_CONFIG_C, typename ACT_CONFIG_IFO>
-void lstm_static(data_T data[CONFIG_T::n_in],
-				 lstm_T h_oldstate[CONFIG_T::n_state],
-				 lstm_T h_newstate[CONFIG_T::n_state], // to be sent over the switch
+void lstmp(data_T data[CONFIG_T::n_in],
+				 lstm_T h_oldstate[CONFIG_T::n_proj],
+				 lstm_T h_newstate[CONFIG_T::n_proj], // to be sent over the switch
 				 lstm_T s_oldstate[CONFIG_T::n_state],
 				 lstm_T s_newstate[CONFIG_T::n_state],
 				 typename CONFIG_T::kernel_T param_i[CONFIG_T::n_state][CONFIG_T::n_in],/*W ifco*/
@@ -179,12 +179,12 @@ void lstm_static(data_T data[CONFIG_T::n_in],
 				 typename CONFIG_T::kernel_T param_c[CONFIG_T::n_state][CONFIG_T::n_in],
 				 typename CONFIG_T::kernel_T param_o[CONFIG_T::n_state][CONFIG_T::n_in],
 
-				 typename CONFIG_T::kernel_T param_r_i[CONFIG_T::n_state][CONFIG_T::n_state], /*U ifco*/
-				 typename CONFIG_T::kernel_T param_r_f[CONFIG_T::n_state][CONFIG_T::n_state],
-				 typename CONFIG_T::kernel_T param_r_c[CONFIG_T::n_state][CONFIG_T::n_state],
-				 typename CONFIG_T::kernel_T param_r_o[CONFIG_T::n_state][CONFIG_T::n_state],
+				 typename CONFIG_T::kernel_T param_r_i[CONFIG_T::n_state][CONFIG_T::n_proj], /*U ifco*/
+				 typename CONFIG_T::kernel_T param_r_f[CONFIG_T::n_state][CONFIG_T::n_proj],
+				 typename CONFIG_T::kernel_T param_r_c[CONFIG_T::n_state][CONFIG_T::n_proj],
+				 typename CONFIG_T::kernel_T param_r_o[CONFIG_T::n_state][CONFIG_T::n_proj],
                  
-                 typename CONFIG_T::proj_kernel_T proj_kernel[CONFIG_T::n_state][CONFIG_T::n_state],
+                 typename CONFIG_T::proj_kernel_T proj_kernel[CONFIG_T::n_proj][CONFIG_T::n_state],
 
 				 typename CONFIG_T::bias_T param_b_i[CONFIG_T::n_state],/*bias ifco*/
 				 typename CONFIG_T::bias_T param_b_f[CONFIG_T::n_state],
@@ -210,7 +210,7 @@ void lstm_static(data_T data[CONFIG_T::n_in],
         		param_f,param_c,param_o, data, fc_i, fc_f, fc_c, fc_o);
 
     // [U_i, U_f, U_c, U_o] * h
-    mat_vec_mul_4<typename CONFIG_T::kernel_T,lstm_T,lstm_T, CONFIG_T::n_state, CONFIG_T::n_state>(param_r_i,
+    mat_vec_mul_4<typename CONFIG_T::kernel_T,lstm_T,lstm_T, CONFIG_T::n_proj, CONFIG_T::n_state>(param_r_i,
     		param_r_f,param_r_c,param_r_o,h_oldstate, fc_i_state, fc_f_state, fc_c_state, fc_o_state);
 
     // [W_i, W_f, W_c, W_o] * x + [U_i, U_f,U_c, U_o] * x + [b_i, b_f, b_c, b_o]
@@ -238,8 +238,8 @@ void lstm_static(data_T data[CONFIG_T::n_in],
 CELL_UPDATE_LOOP:for (int iacc = 0; iacc < (CONFIG_T::n_state); iacc++)
     {
 #pragma HLS UNROLL
-	    lstm_T temp1 = tmpres_c[iacc] * tmpres_ifo[iacc];
-	    lstm_T temp2 = s_oldstate[iacc] * tmpres_ifo[iacc + (CONFIG_T::n_state)];
+		lstm_T temp1 = tmpres_c[iacc] * tmpres_ifo[iacc];
+		lstm_T temp2 = s_oldstate[iacc] * tmpres_ifo[iacc + (CONFIG_T::n_state)];
         s_newstate[iacc] = temp1+temp2;
     }
 
@@ -249,20 +249,15 @@ CELL_UPDATE_LOOP:for (int iacc = 0; iacc < (CONFIG_T::n_state); iacc++)
     	tanh<lstm_T, lstm_T, ACT_CONFIG_C>(s_newstate, s_actstate);
     }
 
+    lstm_T h_temp[CONFIG_T::n_state];
+#pragma HLS array_partition variable=h_temp complete
     for (int iacc = 0; iacc < CONFIG_T::n_state; iacc++)
     {
 #pragma HLS UNROLL
-        h_newstate[iacc] = tmpres_ifo[iacc + 2 * (CONFIG_T::n_state)] * s_actstate[iacc];
+    	h_temp[iacc] = tmpres_ifo[iacc + 2 * (CONFIG_T::n_state)] * s_actstate[iacc];
     }
 
-    lstm_T h_copy[CONFIG_T::n_state];
-    #pragma HLS array_partition variable=h_copy complete
-    for (int i = 0; i < CONFIG_T::n_state; i++)
-    {
-#pragma HLS UNROLL
-        h_copy[i] = h_newstate[i];
-    }
-    mat_vec_mul<typename CONFIG_T::proj_kernel_T,lstm_T,lstm_T, CONFIG_T::n_state, CONFIG_T::n_state>(proj_kernel,h_copy,h_newstate);
+    mat_vec_mul<typename CONFIG_T::proj_kernel_T,lstm_T,lstm_T, CONFIG_T::n_state, CONFIG_T::n_proj>(proj_kernel,h_temp,h_newstate);
 
     for (int i = 0; i < CONFIG_T::n_state; i++)
     {

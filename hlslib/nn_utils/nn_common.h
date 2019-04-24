@@ -105,11 +105,11 @@ void mat_vec_mul(weight_T mat[row][col], data_T vec[col], res_T res[row])
 
 template <class weight_T, class data_T, class res_T, unsigned int col, unsigned int row>
 void mat_vec_mul_4(weight_T mat[row][col], weight_T mat1[row][col], weight_T mat2[row][col], weight_T mat3[row][col], data_T vec[col], res_T res[row]
-																																				 , res_T res1[row], res_T res2[row], res_T res3[row])
+										, res_T res1[row], res_T res2[row], res_T res3[row])
 {
 #pragma HLS inline off
-    res_T dot_product,dot_product1,dot_product2,dot_product3;
-    res_T temp,temp1,temp2,temp3;
+	res_T dot_product,dot_product1,dot_product2,dot_product3;
+	res_T temp,temp1,temp2,temp3;
 
     for (int i = 0; i < row; i++)
     {
