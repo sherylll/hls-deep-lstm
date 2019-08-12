@@ -14,7 +14,7 @@
 #include "encoder_weights/bc.h"
 #include "encoder_weights/bo.h"
 
-void encoder_lstm(data_t inputs[N_INPUTS], bool eos, lstm_t h_last[N_STATES], lstm_t c_last[N_STATES])
+void encoder_lstm(data_t inputs[N_EMBEDDING], bool eos, lstm_t h_last[N_STATES], lstm_t c_last[N_STATES])
 {
 #pragma HLS interface axis port = inputs,h_last,c_last
 #pragma HLS array_reshape variable = Ui,Uf,Wc,Wo,Wi,Wf,Wc,Wo dim = 2
@@ -28,6 +28,12 @@ void encoder_lstm(data_t inputs[N_INPUTS], bool eos, lstm_t h_last[N_STATES], ls
 
     nn::lstm<data_t, lstm_t, config_encoder, cell_act_config, recurrent_act_config>(inputs, h_oldstate, h_newstate, c_oldstate, c_newstate,
             Wi, Wf, Wc, Wo, Ui, Uf, Uc, Uo, bi, bf, bc, bo);
+
+    for (int i = 0; i < N_STATES; i++)
+    {
+        c0_oldstate[i] = c0_newstate[i];
+        h0_oldstate[i] = h0_newstate[i];
+    }
 
     if (eos) // for debugging: eos should be set to true when <end> is seen
     {
