@@ -8,6 +8,7 @@ void encoder(
     ap_uint<169> output[CONFIG_T::n_packets],
     ap_uint<16> slot_id = 0) // defaults to slot 0
 {
+#pragma HLS inline
 #pragma HLS PIPELINE
     ap_uint<169> tmp;
     for (int p=0; p<CONFIG_T::n_packets; p++)

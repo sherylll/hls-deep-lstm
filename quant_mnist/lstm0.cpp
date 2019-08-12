@@ -62,21 +62,8 @@ void lstm0(volatile ap_uint<DRAM_BITWIDTH> *ddr,
 #pragma HLS INTERFACE m_axi port=ddr offset=direct max_write_burst_length=256 //offset=direct: The DDR address are supplied by user from outside the HLS module
 #pragma HLS INTERFACE axis port = res
 
-// #pragma HLS ARRAY_PARTITION variable = W_i complete dim = 2
-// #pragma HLS ARRAY_PARTITION variable = W_f complete dim = 2
-// #pragma HLS ARRAY_PARTITION variable = W_c complete dim = 2
-// #pragma HLS ARRAY_PARTITION variable = W_o complete dim = 2
-
-// #pragma HLS ARRAY_PARTITION variable = U_i cyclic factor=32 dim = 2
-// #pragma HLS ARRAY_PARTITION variable = U_f cyclic factor=32 dim = 2
-// #pragma HLS ARRAY_PARTITION variable = U_c cyclic factor=32 dim = 2
-// #pragma HLS ARRAY_PARTITION variable = U_o cyclic factor=32 dim = 2
 #pragma HLS ARRAY_PARTITION variable=U_i,U_f,W_c,W_o,W_i,W_f,W_c,W_o complete dim = 2
 
-// #pragma HLS ARRAY_PARTITION variable = b_i cyclic factor=32 dim = 1
-// #pragma HLS ARRAY_PARTITION variable = b_f cyclic factor=32 dim = 1
-// #pragma HLS ARRAY_PARTITION variable = b_c cyclic factor=32 dim = 1
-// #pragma HLS ARRAY_PARTITION variable = b_o cyclic factor=32 dim = 1
 #pragma HLS ARRAY_PARTITION variable=b_i,b_f,b_c,b_o complete
 
     static lstm_t h0_oldstate[N_STATES] = {0};

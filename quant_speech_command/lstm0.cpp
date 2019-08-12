@@ -20,7 +20,7 @@
 //#define DRAM_BITWIDTH N_INPUTS * 8
 #define DRAM_BITWIDTH 256
 
-ap_uint<4> max_likelihood(data_t y[N_OUTPUTS])
+ap_uint<4> max_likelihood(res_t y[N_OUTPUTS])
 {
 	ap_uint<4> i_likely = 0;
 	data_t y_max = 0;

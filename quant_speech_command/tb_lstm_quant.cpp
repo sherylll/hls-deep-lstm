@@ -34,7 +34,7 @@ int main()
 	char path_cstr[30];
 
 	data_t x_test[N_LOOP][N_INPUTS];
-	int y_test, counter;
+	int y_test, counter=0;
 	ap_uint<4> y_pred;
 	for (int im=0; im < TEST_SIZE; im ++){
 		sprintf(x_str, "%d.txt", im);

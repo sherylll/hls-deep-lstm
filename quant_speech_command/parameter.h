@@ -9,7 +9,7 @@ typedef ap_fixed<8, 1, AP_RND_CONV, AP_SAT>  bias_t;
 typedef ap_fixed<8, 1, AP_RND_CONV, AP_SAT>  kernel_t;
 typedef ap_fixed<8, 1, AP_RND_CONV, AP_SAT>  by_t;
 typedef ap_fixed<8, 2, AP_RND_CONV, AP_SAT>  Wy_t;
-typedef ap_fixed<8, 6, AP_RND_CONV, AP_SAT>  data_t;
+typedef ap_fixed<32, 6, AP_RND_CONV, AP_SAT>  data_t;
 typedef ap_fixed<8, 6, AP_RND_CONV, AP_SAT>  res_t;
 
 #include "../hlslib/nn_utils/nn_common.h"
@@ -20,7 +20,7 @@ typedef ap_fixed<8, 6, AP_RND_CONV, AP_SAT>  res_t;
 #define N_STATES 128
 #define N_OUTPUTS 12
 
-//#define DATA_TYPE_SIZE 8
+
 //#define N_READCOUNTS 2
 //
 //struct dram_config
@@ -46,7 +46,7 @@ struct fc_config0 : nn::fc_config
 {
     typedef by_t bias_t;
     typedef Wy_t weight_t;
-    typedef ap_fixed<16,6, AP_RND_CONV, AP_SAT> accum_t;
+    typedef ap_fixed<16,8, AP_RND_CONV, AP_SAT> accum_t;
 	static const unsigned n_in = N_STATES;
     static const unsigned n_out = N_OUTPUTS;
 };
@@ -65,7 +65,6 @@ struct recurrent_act_config
     static const unsigned n_in = N_STATES * 3;
     static const unsigned table_size = 4096;
     static const unsigned activation_type = nn::activ_sigmoid;
-//    static const unsigned unroll_factor = 64;                       // for unrolling hardsigmoid
 };
 
 #endif

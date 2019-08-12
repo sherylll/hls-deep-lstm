@@ -9,8 +9,9 @@ typedef ap_fixed<8, 1, AP_RND_CONV, AP_SAT>  kernel_t;
 typedef ap_fixed<8, 1, AP_RND_CONV, AP_SAT>  proj_t;
 typedef ap_fixed<8, 1, AP_RND_CONV, AP_SAT>  by_t;
 typedef ap_fixed<8, 2, AP_RND_CONV, AP_SAT>  Wy_t;
-typedef ap_fixed<8, 6, AP_RND_CONV, AP_SAT>  data_t;
+typedef ap_fixed<16, 6, AP_RND_CONV, AP_SAT>  data_t;
 typedef ap_fixed<8, 6, AP_RND_CONV, AP_SAT>  res_t;
+typedef ap_fixed<8, 1, AP_RND_CONV, AP_SAT>  prob_t;
 
 #include "../hlslib/nn_utils/nn_common.h"
 #include "../hlslib/nn_utils/nn_recurrent.h"
@@ -20,6 +21,16 @@ typedef ap_fixed<8, 6, AP_RND_CONV, AP_SAT>  res_t;
 #define N_STATES 128
 #define N_OUTPUTS 12
 #define N_PROJ 64
+#define DATA_TYPE_SIZE 8
+#define N_PACKETS DATA_TYPE_SIZE*N_PROJ/128
+
+struct packet_config
+{
+	static const unsigned n_data = N_PROJ;
+	static const unsigned n_packets = N_PACKETS;
+	static const unsigned n_chunks = 128 / DATA_TYPE_SIZE;
+	static const unsigned len_data = DATA_TYPE_SIZE;
+};
 
 struct config0 : nn::lstm_config
 {
@@ -71,6 +82,13 @@ struct recurrent_act_config
     static const unsigned table_size = 4096;
     static const unsigned activation_type = nn::activ_sigmoid;
 //    static const unsigned unroll_factor = 64;                       // for unrolling hardsigmoid
+};
+
+struct softmax_config
+{
+	static const unsigned n_in = N_OUTPUTS;
+	static const unsigned table_size = 2048;
+	typedef data_t table_t;
 };
 
 #endif

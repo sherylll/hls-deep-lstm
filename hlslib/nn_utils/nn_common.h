@@ -26,30 +26,6 @@ struct tanh_act_config
         static const unsigned activation_type = nn::activ_tanh;
 };
 
-// workaround to pipeline fp accumulation; n_steps = sqrt(arr_size)
-// template <class data_T>
-// void step10_sum(data_T *arr, data_T *sum, int len)
-// {
-// //#pragma HLS INLINE
-// #pragma HLS PIPELINE
-
-//     data_T temp = 0;
-//     int reminder = len % 10;
-//     int len1 = len - reminder;
-
-//     for (int i = 9; i < len1; i += 10)
-//     {
-//         temp += arr[i] + arr[i - 1] + arr[i - 2] + arr[i - 3] + arr[i - 4] + arr[i - 5] + arr[i - 6] + arr[i - 7] + arr[i - 8] + arr[i - 9];
-//     }
-
-//     data_T temp_r = 0;
-//     for (int i = 0; i < reminder; i++)
-//     {
-//         temp_r += arr[len1 + i];
-//     }
-//     *sum = temp + temp_r;
-// }
-
 struct fc_config
 {
     // Internal data type definitions
@@ -67,6 +43,7 @@ template <class data_T, class res_T, typename CONFIG_T>
 void fc(typename CONFIG_T::weight_t mat[CONFIG_T::n_out][CONFIG_T::n_in], data_T vec[CONFIG_T::n_in],
 		typename CONFIG_T::bias_t bias[CONFIG_T::n_out], res_T res[CONFIG_T::n_out])
 {
+#pragma HLS inline
 	typename CONFIG_T::accum_t accum = 0;
 	typename CONFIG_T::accum_t temp;
 
@@ -83,19 +60,20 @@ void fc(typename CONFIG_T::weight_t mat[CONFIG_T::n_out][CONFIG_T::n_in], data_T
     }
 }
 
-template <class weight_T, class data_T, class res_T, unsigned int col, unsigned int row>
+template <class weight_T, class data_T, class acc_T, class res_T, unsigned int col, unsigned int row>
 void mat_vec_mul(weight_T mat[row][col], data_T vec[col], res_T res[row])
 {
-#pragma HLS inline off
-    res_T dot_product = 0;
-
+#pragma HLS expression_balance off
+//#pragma HLS inline
     for (int i = 0; i < row; i++)
     {
 #pragma HLS PIPELINE
-    	dot_product = 0;
+//#pragma HLS unroll factor=2
+    	acc_T dot_product = 0;
+//#pragma HLS RESOURCE variable=dot_product core=AddSub_DSP
         for (int j = 0; j < col; j++)
         {
-        	res_T temp = mat[i][j] * vec[j];
+        	acc_T temp = mat[i][j] * vec[j];
 // #pragma HLS RESOURCE variable=temp core=Mul_LUT
         	dot_product = temp + dot_product;
         }
@@ -103,32 +81,28 @@ void mat_vec_mul(weight_T mat[row][col], data_T vec[col], res_T res[row])
     }
 }
 
-template <class weight_T, class data_T, class res_T, unsigned int col, unsigned int row>
+template <class weight_T, class data_T, class acc_T, class res_T, unsigned int col, unsigned int row>
 void mat_vec_mul_4(weight_T mat[row][col], weight_T mat1[row][col], weight_T mat2[row][col], weight_T mat3[row][col], data_T vec[col], res_T res[row]
 										, res_T res1[row], res_T res2[row], res_T res3[row])
 {
-#pragma HLS inline off
-	res_T dot_product,dot_product1,dot_product2,dot_product3;
-	res_T temp,temp1,temp2,temp3;
-
     for (int i = 0; i < row; i++)
     {
 #pragma HLS PIPELINE
-#pragma HLS unroll factor=2
-    	dot_product = 0; dot_product1 = 0; dot_product2 = 0; dot_product3 = 0;
+//#pragma HLS unroll factor=2
+    	acc_T dot_product = 0, dot_product1 = 0, dot_product2 = 0, dot_product3 = 0;
         for (int j = 0; j < col; j++)
         {
-        	data_t x = vec[j];
-        	temp = mat[i][j] * x;
+        	data_T x = vec[j];
+        	acc_T temp = mat[i][j] * x;
         	dot_product = temp + dot_product;
 
-        	temp1 = mat1[i][j] * x;
+        	acc_T temp1 = mat1[i][j] * x;
 			dot_product1 = temp1 + dot_product1;
 
-			temp2 = mat2[i][j] * x;
+			acc_T temp2 = mat2[i][j] * x;
 			dot_product2 = temp2 + dot_product2;
 
-			temp3 = mat3[i][j] * x;
+			acc_T temp3 = mat3[i][j] * x;
 			dot_product3 = temp3 + dot_product3;
         }
         res[i] = dot_product; res1[i] = dot_product1;res2[i] = dot_product2;res3[i] = dot_product3;

@@ -202,7 +202,7 @@ void hard_sigmoid(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
     data_T shift = (data_T)0.5;
     for (int ii = 0; ii < CONFIG_T::n_in; ii++)
     {
-#pragma HLS unroll factor=CONFIG_T::unroll_factor
+//#pragma HLS unroll factor=CONFIG_T::unroll_factor
     	data_T temp=slope * data[ii];
 
         datareg = temp + shift;
